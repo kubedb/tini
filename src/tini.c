@@ -538,7 +538,7 @@ int wait_and_forward_signal(sigset_t const* const parent_sigset_ptr, pid_t const
 	return 0;
 }
 
-int reap_zombies(const pid_t child_pid, int* const child_exitcode_ptr) {
+int reap_zombies(const pid_t child_pid) {
 	pid_t current_pid;
 	int current_status;
 
@@ -565,29 +565,29 @@ int reap_zombies(const pid_t child_pid, int* const child_exitcode_ptr) {
 				 */
 				PRINT_DEBUG("Reaped child with pid: '%i'", current_pid);
 				if (current_pid == child_pid) {
-					if (WIFEXITED(current_status)) {
-						/* Our process exited normally. */
-						PRINT_INFO("Main child exited normally (with status '%i')", WEXITSTATUS(current_status));
-						*child_exitcode_ptr = WEXITSTATUS(current_status);
-					} else if (WIFSIGNALED(current_status)) {
-						/* Our process was terminated. Emulate what sh / bash
-						 * would do, which is to return 128 + signal number.
-						 */
-						PRINT_INFO("Main child exited with signal (with signal '%s')", strsignal(WTERMSIG(current_status)));
-						*child_exitcode_ptr = 128 + WTERMSIG(current_status);
-					} else {
-						PRINT_FATAL("Main child exited for unknown reason");
-						return 1;
-					}
+					// if (WIFEXITED(current_status)) {
+					// 	/* Our process exited normally. */
+					// 	PRINT_INFO("Main child exited normally (with status '%i')", WEXITSTATUS(current_status));
+					// 	*child_exitcode_ptr = WEXITSTATUS(current_status);
+					// } else if (WIFSIGNALED(current_status)) {
+					// 	/* Our process was terminated. Emulate what sh / bash
+					// 	 * would do, which is to return 128 + signal number.
+					// 	 */
+					// 	PRINT_INFO("Main child exited with signal (with signal '%s')", strsignal(WTERMSIG(current_status)));
+					// 	*child_exitcode_ptr = 128 + WTERMSIG(current_status);
+					// } else {
+					// 	PRINT_FATAL("Main child exited for unknown reason");
+					// 	return 1;
+					// }
 
-					// Be safe, ensure the status code is indeed between 0 and 255.
-					*child_exitcode_ptr = *child_exitcode_ptr % (STATUS_MAX - STATUS_MIN + 1);
+					// // Be safe, ensure the status code is indeed between 0 and 255.
+					// *child_exitcode_ptr = *child_exitcode_ptr % (STATUS_MAX - STATUS_MIN + 1);
 
-					// If this exitcode was remapped, then set it to 0.
-					INT32_BITFIELD_CHECK_BOUNDS(expect_status, *child_exitcode_ptr);
-					if (INT32_BITFIELD_TEST(expect_status, *child_exitcode_ptr)) {
-						*child_exitcode_ptr = 0;
-					}
+					// // If this exitcode was remapped, then set it to 0.
+					// INT32_BITFIELD_CHECK_BOUNDS(expect_status, *child_exitcode_ptr);
+					// if (INT32_BITFIELD_TEST(expect_status, *child_exitcode_ptr)) {
+					// 	*child_exitcode_ptr = 0;
+					// }
 				} else if (warn_on_reap > 0) {
 					PRINT_WARNING("Reaped zombie process with pid=%i", current_pid);
 				}
@@ -669,7 +669,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Now, reap zombies */
-		if (reap_zombies(child_pid, &child_exitcode)) {
+		if (reap_zombies(child_pid)) {
 			return 1;
 		}
 
