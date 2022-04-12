@@ -1,4 +1,7 @@
-FROM ubuntu:xenial
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
 
 ARG ARCH_SUFFIX
 
